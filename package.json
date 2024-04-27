@@ -7,9 +7,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "next": "^11.1.2", // Phiên bản tương thích với React 17
-    "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "next": "^10.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   }
 }
