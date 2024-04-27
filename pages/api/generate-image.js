@@ -1,4 +1,4 @@
-﻿// pages/api/generate-image.js
+// pages/api/generate-image.js
 import axios from 'axios';
 import crypto from 'crypto'; // Sử dụng thư viện crypto có sẵn trong Node.js
 
@@ -23,7 +23,7 @@ export default async (req, res) => {
             sampler: "DPM++ 2M Karras",
             sdVae: "Automatic",
             steps: 15,
-            sdmodel: "600423083519508503",
+            sd_model: "600423083519508503",
             clip_skip: 2,
             cfg_scale: 7
           }
