@@ -14,6 +14,13 @@ export default async (req, res) => {
       requestId: requestId,
       stages: [
         {
+            "type": "INPUT_INITIALIZE",
+            "inputInitialize": {
+                "seed": -1, 
+                "count": 2 
+            }
+        },
+        {
           type: "DIFFUSION",
           diffusion: {
             width: 512,
