@@ -47,22 +47,10 @@ export default async (req, res) => {
     try {
       const tamsResponse = await axios.post(TAMS_API_ENDPOINT, tamsRequestBody, { headers });
 
-      // Wait 30 seconds before checking the URL again
-      setTimeout(async () => {
-        try {
-          const jobResponse = await axios.get(`/api/job/${requestId}`);
-          const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
+      // Immediately return a response with the requestId
+      // The client will be responsible for polling the job status
+      res.status(200).json({ requestId });
 
-          if (imageUrl) {
-            res.status(200).json({ imageUrl });
-          } else {
-            res.status(503).json({ message: 'Timeout waiting for imageUrl' });
-          }
-        } catch (error) {
-          console.error('Error calling Tams API:', error);
-          res.status(500).json({ message: 'Error calling Tams API', error: error.message });
-        }
-      }, 60000); // Wait 60 seconds (300006milliseconds)
     } catch (error) {
       console.error('Error calling Tams API:', error);
       res.status(500).json({ message: 'Error calling Tams API', error: error.message });
