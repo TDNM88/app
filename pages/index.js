@@ -8,7 +8,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading
 
   useEffect(() => {
-    // Nếu imageUrl thay đổi, tạo một div với ảnh và hiển thị
+    // Nếu imageUrl thay đổi, cập nhật hình ảnh
     if (imageUrl) {
       const imageDiv = document.createElement('div');
       const image = document.createElement('img');
@@ -99,6 +99,7 @@ export default function Home() {
       {loading && <p>Loading...</p>} {/* Hiển thị thông báo loading nếu đang loading */}
       <div id="imageContainer"></div> {/* Div để chứa hình ảnh kết quả */}
       {apiResponse && <pre>{JSON.stringify(apiResponse, null, 2)}</pre>} {/* Hiển thị phản hồi API */}
+      {imageUrl && <img src={imageUrl} alt="Generated Image" />} {/* Hiển thị ảnh từ URL */}
     </div>
   );
 }
