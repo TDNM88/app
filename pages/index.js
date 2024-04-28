@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
@@ -7,18 +8,6 @@ export default function Home() {
   const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading
 
-  useEffect(() => {
-    // Nếu imageUrl thay đổi, cập nhật hình ảnh
-    if (imageUrl) {
-      const imageDiv = document.createElement('div');
-      const image = document.createElement('img');
-      image.src = imageUrl;
-      image.alt = 'Generated Image';
-      imageDiv.appendChild(image);
-      document.getElementById('imageContainer').appendChild(imageDiv);
-    }
-  }, [imageUrl]);
-
   const generateImage = async (e) => {
     e.preventDefault();
     setError('');
@@ -26,57 +15,29 @@ export default function Home() {
     setLoading(true); // Đặt trạng thái loading là true khi bắt đầu gửi yêu cầu
 
     try {
-      const resp = await fetch('/api/generate-image', {
-        method: 'POST',
-        body: JSON.stringify({ prompt }),
-      });
+      const response = await axios.post('/api/generate-image', { prompt });
+      const jobId = response.data.job.id;
 
-      if (!resp.ok) {
-        const json = await resp.json();
-        setError('Failed to generate image.');
-        setLoading(false);
-        return;
-      }
-
-      const json = await resp.json();
-      const jobId = json.id;
-
-      // Hàm đệ quy để theo dõi trạng thái của công việc
-      const checkJobStatus = async () => {
+      // Chờ 30 giây trước khi kiểm tra lại URL
+      setTimeout(async () => {
         try {
-          const jobResp = await fetch(`/api/job/${jobId}`);
-          const jobJson = await jobResp.json();
-          const jobStatus = jobJson.status;
+          const jobResponse = await axios.get(`/api/job/${jobId}`);
+          const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
 
-          if (jobStatus === "SUCCESS") {
-            // Nếu công việc hoàn thành, cập nhật imageUrl và dừng loading
-            const image = jobJson.successInfo.images[0];
-            if (image && image.url) {
-              setImageUrl(image.url);
-              setApiResponse(jobJson);
-              setLoading(false);
-            } else {
-              // Nếu không nhận được URL hình ảnh, tiếp tục kiểm tra
-              setTimeout(checkJobStatus, 3000); // Thử lại sau 3 giây
-            }
-          } else if (jobStatus === "FAILED") {
-            // Nếu công việc thất bại, hiển thị thông báo lỗi và dừng loading
-            setError('Failed to generate image.');
+          if (imageUrl) {
+            setImageUrl(imageUrl);
+            setApiResponse(jobResponse.data.job);
             setLoading(false);
           } else {
-            // Nếu công việc vẫn đang chạy, tiếp tục theo dõi trạng thái
-            setTimeout(checkJobStatus, 3000); // Thử lại sau 3 giây
+            setError('Timeout waiting for imageUrl');
+            setLoading(false);
           }
         } catch (error) {
           setError('Failed to generate image.');
           console.error('Error:', error);
           setLoading(false);
         }
-      };
-
-      // Đặt hẹn giờ 30 giây trước khi kiểm tra URL
-      setTimeout(checkJobStatus, 30000);
-
+      }, 30000); // Chờ 30 giây (30000 milliseconds)
     } catch (error) {
       setError('Failed to generate image.');
       console.error('Error:', error);
@@ -99,9 +60,8 @@ export default function Home() {
       </form>
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading...</p>} {/* Hiển thị thông báo loading nếu đang loading */}
-      <div id="imageContainer"></div> {/* Div để chứa hình ảnh kết quả */}
+      {imageUrl && <img src={imageUrl} alt="Generated" />} {/* Hiển thị ảnh nếu đã nhận được URL */}
       {apiResponse && <pre>{JSON.stringify(apiResponse, null, 2)}</pre>} {/* Hiển thị phản hồi API */}
-      {imageUrl && <img src={imageUrl} alt="Generated Image" />} {/* Hiển thị ảnh từ URL */}
     </div>
   );
 }
