@@ -1,89 +1,34 @@
-import React, { useState } from 'react';
+// pages/api/job/[jobId].js
 import axios from 'axios';
 
-const ImageGenerator = () => {
-  const [prompt, setPrompt] = useState('');
-  const [imageSrc, setImageSrc] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [jobId, setJobId] = useState(null);
-  const [runningInfo, setRunningInfo] = useState(null); // State variable to store runningInfo
+export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    // Extract the jobId from the query parameters
+    const { jobId } = req.query;
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setImageSrc(null);
-    setJobId(null);
-    setRunningInfo(null); // Reset the runningInfo
+    // Define the endpoint for the external API that provides the job status
+    const TAMS_JOB_STATUS_ENDPOINT = `https://ap-east-1.tensorart.cloud/v1/jobs/${jobId}`;
 
     try {
-      const response = await axios.post('/api/generate-image', { prompt });
-      if (response.status === 200 && response.data.jobId) {
-        setJobId(response.data.jobId);
-        pollForImage(response.data.jobId);
-      }
+      // Set up the headers for the external API request
+      const headers = {
+        'Authorization': `Bearer ${process.env.TAMS_API_KEY}`,
+        'x-app-id': process.env.TAMS_APP_ID,
+      };
+
+      // Make a GET request to the external API to fetch the job status
+      const { data } = await axios.get(TAMS_JOB_STATUS_ENDPOINT, { headers });
+
+      // Respond with the job status information
+      res.status(200).json(data);
     } catch (error) {
-      console.error('Error generating image:', error);
-      setLoading(false);
+      // Handle errors by logging them and responding with an error message
+      console.error('Error fetching job status:', error);
+      res.status(500).json({ message: 'Error fetching job status', error: error.message });
     }
-  };
-
-  const pollForImage = (jobId) => {
-    const checkImageStatus = async (jobId) => {
-      try {
-        const response = await axios.get(`/api/job/${jobId}`);
-
-        // Update runningInfo with the latest data from the server
-        if (response.data && response.data.job && response.data.job.runningInfo) {
-          setRunningInfo(response.data.job.runningInfo);
-        }
-
-        // Check if the job has been successfully completed and an image is available
-        if (response.data && response.data.job && response.data.job.successInfo) {
-          const successInfo = response.data.job.successInfo;
-          if (successInfo.images && successInfo.images.length > 0) {
-            const imageUrl = successInfo.images[0].url;
-            setImageSrc(imageUrl);
-            setLoading(false);
-            return true;
-          }
-        }
-      } catch (error) {
-        console.error('Error checking image status:', error);
-        setLoading(false);
-      }
-      return false;
-    };
-
-    const intervalId = setInterval(async () => {
-      const isReady = await checkImageStatus(jobId);
-      if (isReady) {
-        clearInterval(intervalId);
-      }
-    }, 3000);
-  };
-
-  return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-        <button type="submit">Generate Image</button>
-      </form>
-      {loading && <p>Generating image...</p>}
-      {runningInfo && (
-        <div>
-          <p>Image is being processed...</p>
-          {/* Display runningInfo details */}
-          <p>Processing Image Progress: {runningInfo.processingImages[0].progress}%</p>
-        </div>
-      )}
-      {jobId && <p>Job ID: {jobId}</p>}
-      {imageSrc && <img src={imageSrc} alt="Generated" />}
-    </div>
-  );
-};
-
-export default ImageGenerator;
+  } else {
+    // If the request method is not GET, return a 405 Method Not Allowed error
+    res.setHeader('Allow', ['GET']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
