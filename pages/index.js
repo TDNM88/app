@@ -16,28 +16,27 @@ export default function Home() {
 
     try {
       const response = await axios.post('/api/generate-image', { prompt });
-      const jobId = response.data.job.id;
+      const { requestId } = response.data;
 
-      // Chờ 30 giây trước khi kiểm tra lại URL
       setTimeout(async () => {
         try {
-          const jobResponse = await axios.get(`/api/job/${jobId}`);
-          const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
+          const jobResponse = await axios.get(`/api/job/${requestId}`);
+          const imageUrl = jobResponse.data?.imageUrl;
 
           if (imageUrl) {
             setImageUrl(imageUrl);
-            setApiResponse(jobResponse.data.job);
+            setApiResponse(jobResponse.data);
             setLoading(false);
           } else {
             setError('Timeout waiting for imageUrl');
             setLoading(false);
           }
         } catch (error) {
-          setError('Failed to generate image.');
+          setError('Error calling Tams API');
           console.error('Error:', error);
           setLoading(false);
         }
-      }, 30000); // Chờ 30 giây (30000 milliseconds)
+      }, 30000); // Chờ 30 giây trước khi kiểm tra lại URL
     } catch (error) {
       setError('Failed to generate image.');
       console.error('Error:', error);
@@ -60,7 +59,11 @@ export default function Home() {
       </form>
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading...</p>} {/* Hiển thị thông báo loading nếu đang loading */}
-      {imageUrl && <img src={imageUrl} alt="Generated" />} {/* Hiển thị ảnh nếu đã nhận được URL */}
+      {imageUrl && (
+        <div>
+          <img src={imageUrl} alt="Generated" />
+        </div>
+      )}
       {apiResponse && <pre>{JSON.stringify(apiResponse, null, 2)}</pre>} {/* Hiển thị phản hồi API */}
     </div>
   );
