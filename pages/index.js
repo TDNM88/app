@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function Home() {
@@ -7,6 +7,18 @@ export default function Home() {
   const [error, setError] = useState('');
   const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading
+
+  useEffect(() => {
+    // Nếu imageUrl thay đổi, tạo một div với ảnh và hiển thị
+    if (imageUrl) {
+      const imageDiv = document.createElement('div');
+      const image = document.createElement('img');
+      image.src = imageUrl;
+      image.alt = 'Generated Image';
+      imageDiv.appendChild(image);
+      document.getElementById('imageContainer').appendChild(imageDiv);
+    }
+  }, [imageUrl]);
 
   const generateImage = async (e) => {
     e.preventDefault();
@@ -73,7 +85,7 @@ export default function Home() {
       </form>
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading...</p>} {/* Hiển thị thông báo loading nếu đang loading */}
-      {imageUrl && <img src={imageUrl} alt="Generated" />}
+      <div id="imageContainer"></div> {/* Div để chứa hình ảnh kết quả */}
       {apiResponse && <pre>{JSON.stringify(apiResponse, null, 2)}</pre>} {/* Hiển thị phản hồi API */}
     </div>
   );
