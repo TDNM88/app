@@ -47,9 +47,9 @@ export default async (req, res) => {
     try {
       const tamsResponse = await axios.post(TAMS_API_ENDPOINT, tamsRequestBody, { headers });
 
-      // Immediately return a response with the requestId
+      // Immediately return a response with the jobId (previously requestId)
       // The client will be responsible for polling the job status
-      res.status(200).json({ requestId });
+      res.status(200).json({ jobId: requestId }); // Changed from requestId to jobId
 
     } catch (error) {
       console.error('Error calling Tams API:', error);
