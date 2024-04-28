@@ -1,29 +1,18 @@
-const axios = require('axios');
-
-const generateRandomString = (length) => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
-const checkImageUrl = async (requestId) => {
-  try {
-    const jobResponse = await axios.get(`/api/job/${requestId}`);
-    const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
-    return imageUrl;
-  } catch (error) {
-    console.error('Error calling Tams API:', error);
-    throw new Error('Error calling Tams API');
-  }
-};
-
 const generateImage = async (req, res) => {
   if (req.method === 'POST') {
     const { prompt } = req.body;
     const TAMS_API_ENDPOINT = 'https://ap-east-1.tensorart.cloud/v1/jobs';
+
+    // Tạo một requestId ngẫu nhiên và an toàn
+    const generateRandomString = (length) => {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    };
+
     const requestId = generateRandomString(16);
 
     const requestBody = {
@@ -62,19 +51,24 @@ const generateImage = async (req, res) => {
 
     try {
       const tamsResponse = await axios.post(TAMS_API_ENDPOINT, requestBody, { headers });
-      res.status(200).json({ requestId });
 
       // Chờ 30 giây trước khi kiểm tra lại URL
-      const imageUrl = await Promise.race([
-        new Promise((resolve) => setTimeout(resolve, 30000)), // Timeout sau 30 giây
-        checkImageUrl(requestId) // Kiểm tra URL
-      ]);
+      setTimeout(async () => {
+        try {
+          const jobResponse = await axios.get(`/api/job/${requestId}`);
+          const jobStatus = jobResponse.data?.job?.status;
+          const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
 
-      if (imageUrl) {
-        res.status(200).json({ imageUrl });
-      } else {
-        res.status(500).json({ message: 'Timeout waiting for imageUrl' });
-      }
+          if (jobStatus === "SUCCESS" && imageUrl) {
+            res.status(200).json({ imageUrl });
+          } else {
+            res.status(500).json({ message: 'Timeout waiting for imageUrl' });
+          }
+        } catch (error) {
+          console.error('Error calling Tams API:', error);
+          res.status(500).json({ message: 'Error calling Tams API', error: error.message });
+        }
+      }, 30000); // Chờ 30 giây (30000 milliseconds)
     } catch (error) {
       console.error('Error calling Tams API:', error);
       res.status(500).json({ message: 'Error calling Tams API', error: error.message });
