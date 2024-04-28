@@ -7,20 +7,32 @@ export default function Home() {
   const [error, setError] = useState('');
   const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
 
+  import React, { useState } from 'react';
+import axios from 'axios';
+
+export default function Home() {
+  const [prompt, setPrompt] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [error, setError] = useState('');
+  const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
+
   const generateImage = async (e) => {
-    e.preventDefault();
-    setError('');
-    setApiResponse(null); // Xóa phản hồi API trước đó
-    try {
-      const response = await axios.post('/api/generate-image', { prompt });
+  e.preventDefault();
+  setError('');
+  setApiResponse(null); // Xóa phản hồi API trước đó
+  try {
+    const response = await axios.post('/api/generate-image', { prompt });
+    if (response.data.imageUrl) {
       setImageUrl(response.data.imageUrl);
       setApiResponse(response.data); // Lưu trữ phản hồi API vào state
-    } catch (error) {
+    } else {
       setError('Failed to generate image.');
-      console.error('Error:', error);
     }
-  };
-
+  } catch (error) {
+    setError('Failed to generate image.');
+    console.error('Error:', error);
+  }
+};
   return (
     <div>
       <h1>Tams Image Generator</h1>
