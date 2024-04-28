@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
@@ -27,21 +26,34 @@ export default function Home() {
     setLoading(true); // Đặt trạng thái loading là true khi bắt đầu gửi yêu cầu
 
     try {
-      const response = await axios.post('/api/generate-image', { prompt });
-      const jobId = response.data.job.id;
+      const resp = await fetch('/api/generate-image', {
+        method: 'POST',
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!resp.ok) {
+        const json = await resp.json();
+        setError('Failed to generate image.');
+        setLoading(false);
+        return;
+      }
+
+      const json = await resp.json();
+      const jobId = json.id;
 
       // Hàm đệ quy để theo dõi trạng thái của công việc
       const checkJobStatus = async () => {
         try {
-          const jobResponse = await axios.get(`/api/job/${jobId}`);
-          const jobStatus = jobResponse.data.job.status;
+          const jobResp = await fetch(`/api/job/${jobId}`);
+          const jobJson = await jobResp.json();
+          const jobStatus = jobJson.status;
 
           if (jobStatus === "SUCCESS") {
             // Nếu công việc hoàn thành, cập nhật imageUrl và dừng loading
-            const image = jobResponse.data.job.successInfo.images[0];
+            const image = jobJson.successInfo.images[0];
             if (image && image.url) {
               setImageUrl(image.url);
-              setApiResponse(jobResponse.data.job);
+              setApiResponse(jobJson);
               setLoading(false);
             } else {
               // Nếu không nhận được URL hình ảnh, tiếp tục kiểm tra
