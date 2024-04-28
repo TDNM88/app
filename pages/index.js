@@ -15,34 +15,35 @@ export default function Home() {
 
   try {
     const response = await axios.post('/api/generate-image', { prompt });
-    const jobId = response.data.job.id; // Lấy ID công việc từ phản hồi API
-    let imageUrl = null;
+    const jobId = response.data.job.id;
 
-    // Lặp lại việc lấy thông tin công việc đến khi công việc hoàn thành và có URL hình ảnh
-    while (!imageUrl) {
-      const jobResponse = await axios.get(`/api/get-job-status/${jobId}`);
-      const jobStatus = jobResponse.data.job.status;
+    // Hàm đệ quy để theo dõi trạng thái của công việc
+    const checkJobStatus = async () => {
+      try {
+        const jobResponse = await axios.get(`/api/job/${jobId}`);
+        const jobStatus = jobResponse.data.job.status;
 
-      // Nếu công việc đã hoàn thành và có URL hình ảnh, cập nhật imageUrl và dừng vòng lặp
-      if (jobStatus === 'SUCCESS' && jobResponse.data.job.successInfo.images.length > 0) {
-        imageUrl = jobResponse.data.job.successInfo.images[0].url;
-      }
-
-      // Nếu công việc không thành công, đặt lỗi và dừng vòng lặp
-      if (jobStatus === 'FAILED') {
+        if (jobStatus === "SUCCESS") {
+          // Nếu công việc hoàn thành, cập nhật imageUrl và dừng loading
+          setImageUrl(jobResponse.data.job.successInfo.images[0].url);
+          setApiResponse(jobResponse.data.job);
+          setLoading(false);
+        } else if (jobStatus === "FAILED") {
+          // Nếu công việc thất bại, hiển thị thông báo lỗi và dừng loading
+          setError('Failed to generate image.');
+          setLoading(false);
+        } else {
+          // Nếu công việc vẫn đang chạy, tiếp tục theo dõi trạng thái
+          setTimeout(checkJobStatus, 1000); // Thử lại sau 1 giây
+        }
+      } catch (error) {
         setError('Failed to generate image.');
-        break;
+        console.error('Error:', error);
+        setLoading(false);
       }
+    };
 
-      // Đợi một khoảng thời gian trước khi kiểm tra lại trạng thái công việc
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    // Cập nhật imageUrl nếu đã tìm thấy
-    if (imageUrl) {
-      setImageUrl(imageUrl);
-      setLoading(false);
-    }
+    checkJobStatus(); // Bắt đầu theo dõi trạng thái của công việc
   } catch (error) {
     setError('Failed to generate image.');
     console.error('Error:', error);
