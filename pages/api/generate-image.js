@@ -1,8 +1,4 @@
-// pages/api/generate-image.js
-import axios from 'axios';
-import crypto from 'crypto'; // Sử dụng thư viện crypto có sẵn trong Node.js
-
-export default async (req, res) => {
+const generateImage = async (req, res) => {
   if (req.method === 'POST') {
     const { prompt } = req.body;
     const TAMS_API_ENDPOINT = 'https://ap-east-1.tensorart.cloud/v1/jobs';
@@ -14,11 +10,11 @@ export default async (req, res) => {
       requestId: requestId,
       stages: [
         {
-            "type": "INPUT_INITIALIZE",
-            "inputInitialize": {
-                "seed": -1, 
-                "count": 2 
-            }
+          "type": "INPUT_INITIALIZE",
+          "inputInitialize": {
+            "seed": -1,
+            "count": 2
+          }
         },
         {
           type: "DIFFUSION",
@@ -46,7 +42,23 @@ export default async (req, res) => {
 
     try {
       const tamsResponse = await axios.post(TAMS_API_ENDPOINT, requestBody, { headers });
-      res.status(200).json({ imageUrl: tamsResponse.data.imageUrl });
+
+      // Chờ 30 giây trước khi kiểm tra lại URL
+      setTimeout(async () => {
+        try {
+          const jobResponse = await axios.get(`/api/job/${requestId}`);
+          const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
+
+          if (imageUrl) {
+            res.status(200).json({ imageUrl });
+          } else {
+            res.status(500).json({ message: 'Timeout waiting for imageUrl' });
+          }
+        } catch (error) {
+          console.error('Error calling Tams API:', error);
+          res.status(500).json({ message: 'Error calling Tams API', error: error.message });
+        }
+      }, 30000); // Chờ 30 giây (30000 milliseconds)
     } catch (error) {
       console.error('Error calling Tams API:', error);
       res.status(500).json({ message: 'Error calling Tams API', error: error.message });
@@ -56,3 +68,5 @@ export default async (req, res) => {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 };
+
+export default generateImage;
