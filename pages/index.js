@@ -8,23 +8,17 @@ export default function Home() {
   const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
 
   const generateImage = async (e) => {
-  e.preventDefault();
-  setError('');
-  setImageUrl(''); // Reset the imageUrl state
-  setApiResponse(null); // Reset the apiResponse state
-  try {
-    // Step 1: Send POST request to generate the image and get jobID
-    const generateResponse = await axios.post('/api/generate-image', { prompt });
-    const imageUrl = generateResponse.data.job.successInfo.images.url
-          setImageUrl(imageUrl); // Update state with the image URL
-        } else if (statusResponse.data.job &&
-                   statusResponse.data.job.status === 'PENDING') {
-          // If job is still pending, poll again after a delay
-          setTimeout(() => checkJobStatus(jobID), 2000); // Adjust polling interval as needed
-        } else {
-    setError('Failed to generate image.');
-    console.error('Error:', error);
-  }
+    e.preventDefault();
+    setError('');
+    setApiResponse(null); // Xóa phản hồi API trước đó
+    try {
+      const response = await axios.post('/api/generate-image', { prompt });
+      setImageUrl(response.data.imageUrl);
+      setApiResponse(response.data); // Lưu trữ phản hồi API vào state
+    } catch (error) {
+      setError('Failed to generate image.');
+      console.error('Error:', error);
+    }
   };
 
   return (
