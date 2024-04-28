@@ -25,34 +25,35 @@ const ImageGenerator = () => {
   };
 
   const pollForImage = () => {
-    // Define the function that will check the image status
-    const checkImageStatus = async () => {
-      try {
-        const response = await axios.get('/api/check-image-status', {
-          params: { jobId: 'your-job-id' } // Pass the job ID if necessary
-        });
+  // Define the function that will check the image status
+  const checkImageStatus = async () => {
+    try {
+      // Replace 'your-job-id' with the actual job ID returned from the `/api/generate-image` endpoint
+      const jobId = 'your-job-id'; // This should be dynamically set based on the response from the `/api/generate-image` endpoint
+      const response = await axios.get(`/api/job/${jobId}`);
 
-        if (response.data.isImageReady) {
-          setImageSrc(response.data.imageUrl);
-          setLoading(false); // Image is ready, stop loading
-          return true; // Return true to indicate the image is ready
-        }
-      } catch (error) {
-        console.error('Error checking image status:', error);
-        setLoading(false); // Stop loading if there's an error
-        return false; // Return false to indicate the image is not ready
+      // Check if the image is ready based on your API's response structure
+      if (response.data && response.data.imageUrl) {
+        setImageSrc(response.data.imageUrl);
+        setLoading(false); // Image is ready, stop loading
+        return true; // Return true to indicate the image is ready
       }
-      return false; // Return false by default if the image is not ready
-    };
-
-    // Call `checkImageStatus` periodically until the image is ready
-    const intervalId = setInterval(async () => {
-      const isReady = await checkImageStatus();
-      if (isReady) {
-        clearInterval(intervalId);
-      }
-    }, 3000); // Poll every 3 seconds, adjust as needed
+    } catch (error) {
+      console.error('Error checking image status:', error);
+      setLoading(false); // Stop loading if there's an error
+      return false; // Return false to indicate the image is not ready
+    }
+    return false; // Return false by default if the image is not ready
   };
+
+  // Call `checkImageStatus` periodically until the image is ready
+  const intervalId = setInterval(async () => {
+    const isReady = await checkImageStatus();
+    if (isReady) {
+      clearInterval(intervalId);
+    }
+  }, 3000); // Poll every 3 seconds, adjust as needed
+};
 
   return (
     <div>
