@@ -9,67 +9,48 @@ const ImageGenerator = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setImageSrc(null);
+    setImageSrc(null); // Clear the previous image
 
     try {
       const response = await axios.post('/api/generate-image', { prompt });
       if (response.status === 200) {
-        // Set a placeholder image or loading indicator
-        setImageSrc('placeholder_or_loading_image_url');
-        
-        // Start polling for the actual image
+        // Instead of setting a placeholder image, we just enable the loading state
+        // The UI will show a loading message instead of an image
         pollForImage();
       }
     } catch (error) {
       console.error('Error generating image:', error);
-      setLoading(false);
+      setLoading(false); // Stop loading if there's an error
     }
   };
 
   const pollForImage = () => {
-  // Define the function that will check the image status
-  const checkImageStatus = async () => {
-    try {
-      // Replace '/api/check-image-status' with the actual endpoint that
-      // returns the status of the image generation job
-      const response = await axios.get('/api/check-image-status', {
-        params: { jobId: 'your-job-id' } // Pass the job ID if necessary
-      });
+    // Define the function that will check the image status
+    const checkImageStatus = async () => {
+      try {
+        const response = await axios.get('/api/check-image-status', {
+          params: { jobId: 'your-job-id' } // Pass the job ID if necessary
+        });
 
-      // Check the response to see if the image is ready
-      // The condition here depends on how your API indicates readiness
-      if (response.data.isImageReady) {
-        // If the image is ready, update the image source with the generated image URL
-        setImageSrc(response.data.imageUrl);
-        // Stop the loading indicator
-        setLoading(false);
-        // Return true to indicate that the image is ready
-        return true;
+        if (response.data.isImageReady) {
+          setImageSrc(response.data.imageUrl);
+          setLoading(false); // Image is ready, stop loading
+          return true; // Return true to indicate the image is ready
+        }
+      } catch (error) {
+        console.error('Error checking image status:', error);
+        setLoading(false); // Stop loading if there's an error
+        return false; // Return false to indicate the image is not ready
       }
-    } catch (error) {
-      console.error('Error checking image status:', error);
-      // Optionally, handle retries or stop polling after certain conditions
-    }
-    // Return false to indicate that the image is not ready yet
-    return false;
-  };
-
-  // Call `checkImageStatus` periodically until the image is ready
-  const intervalId = setInterval(async () => {
-    const isReady = await checkImageStatus();
-    if (isReady) {
-      clearInterval(intervalId);
-    }
-  }, 3000); // Poll every 3 seconds, adjust as needed
-};
+      return false; // Return false by default if the image is not ready
+    };
 
     // Call `checkImageStatus` periodically until the image is ready
-    const intervalId = setInterval(() => {
-      checkImageStatus().then((isReady) => {
-        if (isReady) {
-          clearInterval(intervalId);
-        }
-      });
+    const intervalId = setInterval(async () => {
+      const isReady = await checkImageStatus();
+      if (isReady) {
+        clearInterval(intervalId);
+      }
     }, 3000); // Poll every 3 seconds, adjust as needed
   };
 
@@ -83,8 +64,8 @@ const ImageGenerator = () => {
         />
         <button type="submit">Generate Image</button>
       </form>
-      {loading && <p>Generating image...</p>}
-      {imageSrc && <img src={imageSrc} alt="Generated" />}
+      {loading && <p>Generating image...</p>} {/* Show loading message */}
+      {imageSrc && <img src={imageSrc} alt="Generated" />} {/* Show generated image */}
     </div>
   );
 };
