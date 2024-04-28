@@ -62,7 +62,7 @@ export default async (req, res) => {
           console.error('Error calling Tams API:', error);
           res.status(500).json({ message: 'Error calling Tams API', error: error.message });
         }
-      }, 30000); // Wait 30 seconds (30000 milliseconds)
+      }, 60000); // Wait 60 seconds (300006milliseconds)
     } catch (error) {
       console.error('Error calling Tams API:', error);
       res.status(500).json({ message: 'Error calling Tams API', error: error.message });
