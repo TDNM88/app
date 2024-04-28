@@ -1,6 +1,13 @@
 // pages/api/job/[jobId].js
 import axios from 'axios';
 
+// Define the hexToUint64 function to convert a hexadecimal string to a uint64 string
+function hexToUint64(hexString) {
+  const hexPrefixed = hexString.startsWith('0x') ? hexString : '0x' + hexString;
+  const bigIntValue = BigInt(hexPrefixed);
+  return bigIntValue.toString(10);
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     // Extract the jobId from the query parameters
