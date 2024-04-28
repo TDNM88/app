@@ -7,15 +7,6 @@ export default function Home() {
   const [error, setError] = useState('');
   const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
 
-  import React, { useState } from 'react';
-import axios from 'axios';
-
-export default function Home() {
-  const [prompt, setPrompt] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [error, setError] = useState('');
-  const [apiResponse, setApiResponse] = useState(null); // State mới để lưu trữ phản hồi API
-
   const generateImage = async (e) => {
   e.preventDefault();
   setError('');
