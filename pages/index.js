@@ -26,9 +26,15 @@ export default function Home() {
 
           if (jobStatus === "SUCCESS") {
             // Nếu công việc hoàn thành, cập nhật imageUrl và dừng loading
-            setImageUrl(jobResponse.data.job.successInfo.images[0].url);
-            setApiResponse(jobResponse.data.job);
-            setLoading(false);
+            const image = jobResponse.data.job.successInfo.images[0];
+            if (image && image.url) {
+              setImageUrl(image.url);
+              setApiResponse(jobResponse.data.job);
+              setLoading(false);
+            } else {
+              // Nếu không nhận được URL hình ảnh, tiếp tục kiểm tra
+              setTimeout(checkJobStatus, 3000); // Thử lại sau 3 giây
+            }
           } else if (jobStatus === "FAILED") {
             // Nếu công việc thất bại, hiển thị thông báo lỗi và dừng loading
             setError('Failed to generate image.');
