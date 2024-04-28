@@ -1,19 +1,14 @@
-const generateImage = async (req, res) => {
+// pages/api/generate-image.js
+import axios from 'axios';
+import crypto from 'crypto';
+
+export default async (req, res) => {
   if (req.method === 'POST') {
     const { prompt } = req.body;
     const TAMS_API_ENDPOINT = 'https://ap-east-1.tensorart.cloud/v1/jobs';
 
     // Tạo một requestId ngẫu nhiên và an toàn
-    const generateRandomString = (length) => {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let result = '';
-      for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      return result;
-    };
-
-    const requestId = generateRandomString(16);
+    const requestId = crypto.randomBytes(16).toString('hex');
 
     const requestBody = {
       requestId: requestId,
@@ -56,10 +51,9 @@ const generateImage = async (req, res) => {
       setTimeout(async () => {
         try {
           const jobResponse = await axios.get(`/api/job/${requestId}`);
-          const jobStatus = jobResponse.data?.job?.status;
           const imageUrl = jobResponse.data?.job?.successInfo?.images?.[0]?.url;
 
-          if (jobStatus === "SUCCESS" && imageUrl) {
+          if (imageUrl) {
             res.status(200).json({ imageUrl });
           } else {
             res.status(500).json({ message: 'Timeout waiting for imageUrl' });
@@ -78,5 +72,3 @@ const generateImage = async (req, res) => {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 };
-
-export default generateImage;
