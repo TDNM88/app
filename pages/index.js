@@ -74,7 +74,9 @@ export default function Home() {
         }
       };
 
-      checkJobStatus(); // Bắt đầu theo dõi trạng thái của công việc
+      // Đặt hẹn giờ 30 giây trước khi kiểm tra URL
+      setTimeout(checkJobStatus, 30000);
+
     } catch (error) {
       setError('Failed to generate image.');
       console.error('Error:', error);
