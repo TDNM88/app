@@ -64,6 +64,7 @@ const ImageGenerator = () => {
         <button type="submit">Generate Image</button>
       </form>
       {loading && <p>Generating image...</p>} {/* Show loading message */}
+      {jobId && <p>Your image is being processed. Job ID: {jobId}</p>} {/* Display jobId */}
       {imageSrc && <img src={imageSrc} alt="Generated" />} {/* Show generated image */}
     </div>
   );
