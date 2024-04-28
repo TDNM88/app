@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const ImageGenerator = () => {
@@ -7,13 +7,6 @@ const ImageGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [jobId, setJobId] = useState(null);
   const [runningInfo, setRunningInfo] = useState(null);
-
-  // Convert a hexadecimal string to a uint64 string
-  const hexToUint64 = (hexString) => {
-    const hexPrefixed = hexString.startsWith('0x') ? hexString : '0x' + hexString;
-    const bigIntValue = BigInt(hexPrefixed);
-    return bigIntValue.toString(10);
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -25,10 +18,8 @@ const ImageGenerator = () => {
     try {
       const response = await axios.post('/api/generate-image', { prompt });
       if (response.status === 200 && response.data.jobId) {
-        // Convert the hexadecimal jobId to a uint64 string
-        const jobIdUint64 = hexToUint64(response.data.jobId);
-        setJobId(jobIdUint64);
-        pollForImage(jobIdUint64);
+        setJobId(response.data.jobId);
+        await pollForImage(response.data.jobId);
       }
     } catch (error) {
       console.error('Error generating image:', error);
@@ -36,36 +27,40 @@ const ImageGenerator = () => {
     }
   };
 
-  const pollForImage = (uint64JobId) => {
-    const checkImageStatus = async (uint64JobId) => {
-      try {
-        const response = await axios.get(`/api/job/${uint64JobId}`);
-        if (response.data && response.data.job && response.data.job.successInfo) {
-          const successInfo = response.data.job.successInfo;
-          if (successInfo.images && successInfo.images.length > 0) {
-            const imageUrl = successInfo.images[0].url;
-            setImageSrc(imageUrl);
-            setLoading(false);
-            return true;
+  const pollForImage = async (jobId) => {
+    setLoading(true);
+    try {
+      let isComplete = false;
+      while (!isComplete) {
+        const response = await axios.get(`/api/job/${jobId}`);
+        if (response.data && response.data.job) {
+          if (response.data.job.successInfo) {
+            const successInfo = response.data.job.successInfo;
+            if (successInfo.images && successInfo.images.length > 0) {
+              const imageUrl = successInfo.images[0].url;
+              setImageSrc(imageUrl);
+              isComplete = true;
+            }
+          } else if (response.data.job.runningInfo) {
+            setRunningInfo(response.data.job.runningInfo);
           }
         }
-        if (response.data && response.data.job && response.data.job.runningInfo) {
-          setRunningInfo(response.data.job.runningInfo);
-        }
-      } catch (error) {
-        console.error('Error checking image status:', error);
-        setLoading(false);
+        // Delay the next poll by 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
-      return false;
-    };
-
-    const intervalId = setInterval(async () => {
-      const isReady = await checkImageStatus(uint64JobId);
-      if (isReady) {
-        clearInterval(intervalId);
-      }
-    }, 3000);
+    } catch (error) {
+      console.error('Error checking image status:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      setLoading(false); // Stop loading when component unmounts
+    };
+  }, []);
 
   return (
     <div>
@@ -78,7 +73,7 @@ const ImageGenerator = () => {
         />
         <button type="submit" disabled={loading}>Generate Image</button>
       </form>
-      {loading && <p>Generating image...</p>}
+      {loading && !imageSrc && <p>Generating image...</p>}
       {jobId && <p>Job ID: {jobId}</p>}
       {runningInfo && (
         <div>
