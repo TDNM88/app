@@ -1,23 +1,13 @@
 // pages/api/job/[jobId].js
 import axios from 'axios';
 
-// Define the hexToUint64 function to convert a hexadecimal string to a uint64 string
-function hexToUint64(hexString) {
-  const hexPrefixed = hexString.startsWith('0x') ? hexString : '0x' + hexString;
-  const bigIntValue = BigInt(hexPrefixed);
-  return bigIntValue.toString(10);
-}
-
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     // Extract the jobId from the query parameters
     const { jobId } = req.query;
 
-    // Convert jobId from hexadecimal to uint64 string
-    const uint64JobId = hexToUint64(jobId);
-
     // Define the endpoint for the external API that provides the job status
-    const TAMS_JOB_STATUS_ENDPOINT = `https://ap-east-1.tensorart.cloud/v1/jobs/${uint64JobId}`;
+    const TAMS_JOB_STATUS_ENDPOINT = `https://ap-east-1.tensorart.cloud/v1/jobs/${jobId}`;
 
     try {
       // Set up the headers for the external API request
