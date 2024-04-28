@@ -35,7 +35,7 @@ export default function Home() {
             setLoading(false);
           } else {
             // Nếu công việc vẫn đang chạy, tiếp tục theo dõi trạng thái
-            setTimeout(checkJobStatus, 1000); // Thử lại sau 1 giây
+            setTimeout(checkJobStatus, 3000); // Thử lại sau 3 giây
           }
         } catch (error) {
           setError('Failed to generate image.');
