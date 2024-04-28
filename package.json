@@ -1,20 +1,20 @@
 {
   "name": "my-serverless-app",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "start-legacy": "NODE_OPTIONS=--openssl-legacy-provider next start"
-  },
-  "dependencies": {
-    "axios": "^1.6.8",
-    "next": "^10.0.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "tams-sdk": "^1.0.0"
-  },
-   "engines": {
-    "node": "14.x"
-},
-}
+      "version": "1.0.0",
+      "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "start-legacy": "NODE_OPTIONS=--openssl-legacy-provider next start"
+      },
+      "dependencies": {
+        "axios": "^1.6.8",
+        "next": "^10.0.0",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "tams-sdk": "^1.0.0"
+      },
+      "engines": {
+        "node": "14.x"
+      }
+    }
