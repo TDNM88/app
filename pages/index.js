@@ -22,7 +22,7 @@ export default function Home() {
       try {
         const statusResponse = await axios.get(`/api/job-status/${jobID}`);
         if (statusResponse.data.job &&
-            statusResponse.data.job.status === 'SUCCESS' && // Replace 'SUCCESS' with the actual success status from the API
+            statusResponse.data.job.status === '200' && // Replace 'SUCCESS' with the actual success status from the API
             statusResponse.data.job.successInfo &&
             statusResponse.data.job.successInfo.images &&
             statusResponse.data.job.successInfo.images.length > 0) {
