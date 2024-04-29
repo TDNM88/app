@@ -5,21 +5,19 @@ const ImageGenerator = () => {
   const [prompt, setPrompt] = useState('');
   const [imageSrc, setImageSrc] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [jobId, setJobId] = useState(null);
-  const [jobStatus, setJobStatus] = useState(null);
+  const [jobInfo, setJobInfo] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setImageSrc(null);
-    setJobId(null);
-    setJobStatus(null);
+    setJobInfo(null);
 
     try {
       const response = await axios.post('/api/generate-image', { prompt });
-      if (response.status === 200 && response.data.jobId) {
-        setJobId(response.data.jobId);
-        pollForImageStatus(response.data.jobId);
+      if (response.status === 200) {
+        setJobInfo(response.data); // Display all information from the POST response
+        pollForImageStatus(response.data.jobId); // Start polling using the jobId
       }
     } catch (error) {
       console.error('Error generating image:', error);
@@ -33,7 +31,7 @@ const ImageGenerator = () => {
         const response = await axios.get(`/api/job/${jobId}`);
         const jobData = response.data.job;
 
-        setJobStatus(jobData); // Update the job status in the state
+        setJobInfo(jobData); // Update the displayed job information
 
         if (jobData.status === 'SUCCESS' && jobData.successInfo.images.length > 0) {
           const imageUrl = jobData.successInfo.images[0].url;
@@ -67,11 +65,12 @@ const ImageGenerator = () => {
         <button type="submit" disabled={loading}>Generate Image</button>
       </form>
       {loading && <p>Checking job status...</p>}
-      {jobStatus && (
+      {jobInfo && (
         <div>
-          <p>Job ID: {jobId}</p>
-          <p>Status: {jobStatus.status}</p>
-          {/* Display additional job status details here as needed */}
+          <p>Job ID: {jobInfo.id}</p>
+          <p>Status: {jobInfo.status}</p>
+          {/* Display additional job information details here */}
+          <pre>{JSON.stringify(jobInfo, null, 2)}</pre> {/* This will format and display the jobInfo object */}
         </div>
       )}
       {imageSrc && <img src={imageSrc} alt="Generated" />}
