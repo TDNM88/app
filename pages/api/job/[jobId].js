@@ -6,6 +6,9 @@ export default async function handler(req, res) {
     // Extract the jobId from the query parameters
     const { jobId } = req.query;
 
+    // Since jobId is a uint64, it should be treated as a string in JavaScript.
+    // No need to convert it, just make sure it's a string and pass it directly to the API.
+
     // Define the endpoint for the external API that provides the job status
     const TAMS_JOB_STATUS_ENDPOINT = `https://ap-east-1.tensorart.cloud/v1/jobs/${jobId}`;
 
